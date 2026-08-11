@@ -1,0 +1,111 @@
+This is a php app for visitor management that allows our security personnel's to document information of visitors in the system. We are security service provider for a telecom company named Sycatel.
+
+The app allows us to document visitor/customer information such as Name, Mobile No., email, contact person name, visit reason that's a list of options such as purchasing, enquiry, dispute, meeting, presentation, others. and time stamp auto captured.
+
+These detail are saved in MySQL.
+
+The app has a separate page for new visitor entry, and fetch pages for all entries and lastly another fetch entry based on visit reason.
+
+This project has to be delivered using a containerized approach and we will be using docker compose for image building and running the application.
+
+
+following is the directory structure
+
+visitor-management-app/
+│
+├── app/
+│   ├── db.php
+│   ├── index.php
+│   ├── add_visitor.php
+│   ├── fetch_all.php
+│   ├── fetch_by_reason.php
+│   └── Dockerfile
+│
+├── mysql/
+│   └── Dockerfile
+│   └── init.sql
+│
+└── docker-compose.yml
+
+
+
+I am using amazon linux 2023 on t2.medium
+To achieve this we need to install docker:
+
+sudo hostnamectl set-hostname vm1 
+sudo yum update
+sudo yum install docker -y
+sudo usermod -aG docker ec2-user
+sudo systemctl start docker
+sudo systemctl enable docker
+exit
+
+
+------------------------------
+##Docker Compose
+# 1. Create the CLI plugins directory (if it doesn't exist)
+sudo mkdir -p /usr/libexec/docker/cli-plugins
+
+# 2. Download the latest Docker Compose V2 binary for Linux AMD64
+sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+  -o /usr/libexec/docker/cli-plugins/docker-compose
+
+# 3. Make it executable
+sudo chmod +x /usr/libexec/docker/cli-plugins/docker-compose
+
+# 4. (Optional but recommended) Restart Docker to refresh plugin discovery
+sudo systemctl restart docker
+
+# 5. EC2 user permissions
+sudo mkdir /home/ec2-user/.docker
+sudo chown -R ec2-user:ec2-user /home/ec2-user/.docker
+docker compose version
+
+
+------------------------------
+
+
+------------------------------
+##Buildx plugin
+# Get latest buildx release
+BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep '"tag_name":' | cut -d'"' -f4)
+BUILDX_URL="https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64"
+
+sudo mkdir -p ~/.docker/cli-plugins
+curl -sL "$BUILDX_URL" | sudo tee ~/.docker/cli-plugins/docker-buildx > /dev/null
+sudo chmod +x ~/.docker/cli-plugins/docker-buildx
+
+# Ensure it's used
+docker buildx version
+
+------------------------------
+
+
+final testing...
+
+docker compose build
+docker compose up
+
+
+### Corrected Installer
+# 1. Add the repository (re-run to ensure it exists)
+sudo dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+# 2. Manually set the version to '9' instead of '2023'
+sudo sed -i 's/$releasever/9/g' /etc/yum.repos.d/docker-ce.repo
+
+# 3. Clean the dnf cache to remove the failed metadata
+sudo dnf clean all
+
+
+# 4. This will install Docker and the necessary Buildx/Compose plugins
+sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 5. Start and enable the service 
+sudo systemctl enable --now docker
+
+
+
+
+
+Visit http://localhost:8080
